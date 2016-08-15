@@ -165,7 +165,7 @@
 
         <div class="new-todoBox"><input class="new-todo" placeholder="What needs to be done?" v-model="newTodo" v-on:keyup.enter="addTodo"></div>
         <div>
-            <input type="checkbox" class="toggle-all">
+            <input type="checkbox" class="toggle-all" v-model="allDone">
             <ul class="listBox">
                 <li class="todo" v-for="list in filteredTodos">
                     <div class="view">
@@ -181,6 +181,7 @@
                     <li><a href="#/active" :class="{selected:visibility=='active'}">Active</a></li>
                     <li><a href="#/completed" :class="{selected:visibility=='completed'}">Completed</a></li>
                 </ul>
+                <button class="clear-completed" :class="{fn-hide:}">Clear completed</button>
             </footer>
         </div>
     </div>
@@ -225,12 +226,24 @@
                     localStorage.setItem("todos-vuejs",JSON.stringify(this.todoItems));
                 }
             },
+            //computed对data对象方法的里的数据进行操作
             computed:{
                 filteredTodos: function () {
                     return filters[this.visibility](this.todoItems);
                 },
                 remaining: function () {
                     return filters.active(this.todoItems).length;
+                },
+                allDone: {
+                    get: function () {
+                        return this.remaining === 0;
+                    },
+                    set: function (value) {
+                        //get里返回为true时，触发set回调函数
+                        this.todoItems.forEach(function (todo) {
+                            todo.completed = value;
+                        });
+                    }
                 }
             }
 
