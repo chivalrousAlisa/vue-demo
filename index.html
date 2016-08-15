@@ -1,0 +1,261 @@
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>Todo-MVC</title>
+    <!--<link rel="stylesheet" href="css/index.css"/>-->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        li,
+        ol,
+        ul {
+            list-style: none;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        body {
+            font-family: "微软雅黑", tahoma, arial, Hiragino Sans GB, '\5b8b\4f53', sans-serif;
+            padding-top: 100px;
+            font-size: 14px;
+        }
+
+        .fn-hide {
+            display: none;
+        }
+
+        /*清除浮动*/
+        .fn-clear {
+            zoom: 1;
+        }
+
+        .fn-clear:before {
+            content: "";
+            display: table;
+        }
+
+        .fn-clear:after {
+            visibility: hidden;
+            display: block;
+            font-size: 0;
+            content: " ";
+            clear: both;
+            height: 0;
+        }
+
+        .borderbox {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -o-box-sizing: border-box;
+            -ms-box-sizing: border-box;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .new-todoBox {
+            padding: 10px 25px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .new-todo {
+            border: none;
+            outline: none;
+            height: 40px;
+        }
+
+        .listBox li {
+            padding: 15px 25px;
+            border-bottom: 1px solid #ccc;
+            padding-left: 5px;
+        }
+
+        .listBox li:hover .destroy {
+            display: inline-block;
+        }
+
+        .destroy {
+            float: right;
+            color: #f50;
+        }
+
+        .content,
+        .edit {
+            margin-left: 15px;
+        }
+
+        .edit {
+            width: 85%;
+        }
+
+        .line {
+            text-decoration: line-through;
+        }
+
+        .toggle {
+            vertical-align: middle;
+        }
+
+        .toggle-all {
+            position: relative;
+            top: -39px;
+            left: 5px;
+        }
+
+        .footer {
+            padding: 10px 5px;
+            padding-top: 0;
+        }
+
+        .filters {
+            margin-left: 5%;
+            float: left;
+            margin-top: 10px;
+        }
+
+        .filters li {
+            float: left;
+            margin: 0 10px;
+        }
+
+        .filters li a {
+            text-decoration: none;
+        }
+
+        .filters li a:active {
+            text-decoration: underline;
+        }
+
+        .filters li a.selected {
+            text-decoration: underline;
+        }
+
+        .todo-count {
+            float: left;
+            margin-top: 10px;
+        }
+
+        .clear-completed {
+            float: left;
+            margin-top: 10px;
+            margin-right: 3px;
+        }
+
+    </style>
+    <script src="dist/vue.min.js"></script>
+    <script src="dist/director.js"></script>
+</head>
+<body>
+<div id="container" class="container">
+    <div data-reactroot=""><h1 class="header">todos</h1>
+
+        <div class="new-todoBox"><input class="new-todo" placeholder="What needs to be done?" v-model="newTodo" v-on:keyup.enter="addTodo"></div>
+        <div>
+            <input type="checkbox" class="toggle-all">
+            <ul class="listBox">
+                <li class="todo" v-for="list in filteredTodos">
+                    <div class="view">
+                        <input type="checkbox" class="toggle" v-model="list.completed">
+                        <label class="content" v-bind:class="{'line':list.completed}">{{list.title}}</label>
+                        <input type="text" class="edit fn-hide"><button class="destroy fn-hide"  v-on:click="removeTodo($index)">X</button>
+                    </div>
+                </li>
+            </ul>
+            <footer class="footer fn-clear"><span class="todo-count"><strong>{{remaining}}</strong><!-- react-text: 11 --> item left<!-- /react-text --></span>
+                <ul class="filters fn-clear">
+                    <li><a href="#/all" :class="{selected:visibility=='all'}">All</a></li>
+                    <li><a href="#/active" :class="{selected:visibility=='active'}">Active</a></li>
+                    <li><a href="#/completed" :class="{selected:visibility=='completed'}">Completed</a></li>
+                </ul>
+            </footer>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        var filters = {
+            all: function (todos) {
+                return todos;
+
+            },
+            active: function (todos) {
+                return todos.filter(function (todo) {
+                    return !todo.completed;
+                });
+            },
+            completed: function (todos) {
+                return todos.filter(function (todo) {
+                    return todo.completed;
+                });
+            }
+        };
+
+        var app=new Vue({
+            el:"#container",
+            data:{
+                newTodo:"",
+                todoItems:JSON.parse(localStorage.getItem("todos-vuejs") || '[]'),
+                visibility: 'all'
+            },
+            methods:{
+                addTodo:function(){
+                    var text=this.newTodo.trim();
+                    if(text){
+                        this.todoItems.unshift({title:text,completed:false});
+                        localStorage.setItem("todos-vuejs",JSON.stringify(this.todoItems));
+                        this.newTodo="";
+                    }
+                },
+                removeTodo:function(index){
+                    this.todoItems.splice(index,1);
+                    localStorage.setItem("todos-vuejs",JSON.stringify(this.todoItems));
+                }
+            },
+            computed:{
+                filteredTodos: function () {
+                    return filters[this.visibility](this.todoItems);
+                },
+                remaining: function () {
+                    return filters.active(this.todoItems).length;
+                }
+            }
+
+        });
+
+        //路由配置
+        (function(){
+            var router = new Router();
+            var arr = ['all', 'active', 'completed'];
+            arr.forEach(function(visibility){
+                router.on(visibility,function(){
+                    app.visibility = visibility;
+                });
+            });
+
+            router.configure({
+                notfound: function () {
+                    window.location.hash = '';
+                    app.visibility = 'all';
+                }
+            });
+            router.init();
+        })();
+    })();
+
+</script>
+</body>
+</html>
