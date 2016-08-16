@@ -170,8 +170,9 @@
                 <li class="todo" v-for="list in filteredTodos">
                     <div class="view">
                         <input type="checkbox" class="toggle" v-model="list.completed">
-                        <label class="content" v-bind:class="{'line':list.completed}">{{list.title}}</label>
-                        <input type="text" class="edit fn-hide"><button class="destroy fn-hide"  v-on:click="removeTodo($index)">X</button>
+                        <label class="content" @dblclick="editTodo(list)" v-show="!editshow" v-model="editshow" v-bind:class="{'line':list.completed}">{{list.title}}</label>
+                        <input type="text" class="edit" v-show="editshow" v-model="list.title" @keyup.esc="cancelEdit(list)" @blur="doneEdit(list)">
+                        <button class="destroy fn-hide"  v-on:click="removeTodo($index)">X</button>
                     </div>
                 </li>
             </ul>
@@ -181,7 +182,7 @@
                     <li><a href="#/active" :class="{selected:visibility=='active'}">Active</a></li>
                     <li><a href="#/completed" :class="{selected:visibility=='completed'}">Completed</a></li>
                 </ul>
-                <button class="clear-completed" :class="{fn-hide:}">Clear completed</button>
+                <button class="clear-completed"  @click="removeCompleted" v-show="todoItems.length > remaining">Clear completed</button>
             </footer>
         </div>
     </div>
@@ -210,7 +211,8 @@
             data:{
                 newTodo:"",
                 todoItems:JSON.parse(localStorage.getItem("todos-vuejs") || '[]'),
-                visibility: 'all'
+                visibility: 'all',
+                editshow:false//控制编辑时的交互显隐
             },
             methods:{
                 addTodo:function(){
@@ -224,6 +226,31 @@
                 removeTodo:function(index){
                     this.todoItems.splice(index,1);
                     localStorage.setItem("todos-vuejs",JSON.stringify(this.todoItems));
+                },
+                removeCompleted: function () {
+                    this.todoItems = filters.active(this.todoItems);
+                    localStorage.setItem("todos-vuejs",JSON.stringify(this.todoItems));
+                },
+                editTodo: function (todo) {
+                    this.editshow=true;
+                    this.beforeEditCache = todo.title;
+                    this.editedTodo = todo;
+                },
+                cancelEdit: function (todo) {
+                    this.editshow=false;
+                    this.editedTodo = null;
+                    todo.title = this.beforeEditCache;
+                },
+                doneEdit: function (todo) {
+                    this.editshow=false;
+                    if (!this.editedTodo) {
+                        return;
+                    }
+                    this.editedTodo = null;
+                    todo.title = todo.title.trim();
+                    if (!todo.title) {
+                        this.removeTodo(todo);
+                    }
                 }
             },
             //computed对data对象方法的里的数据进行操作
@@ -233,6 +260,10 @@
                 },
                 remaining: function () {
                     return filters.active(this.todoItems).length;
+                },
+                completed:function(){
+                    return filters.completed(this.todoItems).length;
+                    console.log(completed);
                 },
                 allDone: {
                     get: function () {
