@@ -1,0 +1,96 @@
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>Todo-MVC</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            list-style:none;
+        }
+        body {
+            font-family: Helvetica Neue, Arial, sans-serif;
+            font-size: 14px;
+            color: #444;
+            padding:20px;
+        }
+        table {
+            border: 2px solid #42b983;
+            border-radius: 3px;
+            background-color: #fff;
+            margin-top:10px;
+        }
+
+        th {
+            background-color: #42b983;
+            color: rgba(255,255,255,0.66);
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -user-select: none;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        th, td {
+            min-width: 120px;
+            padding: 10px 20px;
+        }
+
+        th.active {
+            color: #fff;
+        }
+
+        .arrow {
+            display: inline-block;
+            vertical-align: middle;
+            width: 0;
+            height: 0;
+            margin-left: 5px;
+            opacity: 0.66;
+        }
+        .arrow.asc {
+            border:4px solid transparent;
+            border-bottom-color:#fff;
+        }
+
+        .arrow.dsc {
+            border:4px solid transparent;
+            border-top-color:#fff;
+        }
+        th.active .arrow {
+            opacity: 1;
+        }
+    </style>
+    <script src="dist/vue.min.js"></script>
+</head>
+<body>
+<script type="text/x-template" id="grid-template">
+    <table>
+        <thead>
+            <tr>
+                <th v-for="key in columns" @click="sortBy(key)" :class="{active: sortKey == key}">
+                    <span>{{key | capitalize}}</span>
+                    <i class="arrow asc"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="entry in data | filterBy filterKey | orderBy sortKey sortOrders[sortKey]">
+                <td v-for="key in columns">{{entry[key]}}</td>
+            </tr>
+        </tbody>
+    </table>
+</script>
+    <div id="demo">
+        <form action="" id="search">
+            <input type="text" placeholder="请输入搜索内容" v-model="searchQuery"/>
+        </form>
+        <demo-grid :data="gridData" :columns="gridColumns" :filter-key="searchQuery"></demo-grid>
+    </div>
+    <script src="grid.js"></script>
+</body>
+</html>
